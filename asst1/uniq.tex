@@ -1,0 +1,280 @@
+\documentclass[a4paper,12pt,fleqn]{scrartcl}
+\usepackage[l2tabu,orthodox]{nag}% Old habits die hard. All the same, there are commands, classes and packages which are outdated and superseded. nag provides routines to warn the user about the use of those.
+
+\usepackage[all,error]{onlyamsmath}% Error on deprecated math commands like $$ $$.
+\usepackage[strict=true]{csquotes}
+
+%\usepackage{color}
+
+\usepackage{listings}
+\lstset{frame=single,framerule=0pt,language={C},showstringspaces=false,numbers=left,columns=fullflexible}
+
+% COMP2111-specific macros. See
+% http://www.cse.unsw.edu.au/~cs2111/18s1/LaTeX/primer.html
+\usepackage{2111defs2}
+\usepackage[colorlinks=true]{hyperref}
+
+\newcommand{\assn}[1]{{\color{red}\left\{#1\right\}}}
+\newcommand{\remark}[1]{{\sffamily\color{blue}{#1}}}
+
+% define some convenience macros specific to this task
+\newcommand{\perm}{\mathsf{perm}}
+
+\title{COMP2111 Assignment 1}
+% name OR student number for each of the two
+\author{z5160405 \and Nathan Ellis}
+
+\begin{document}
+\maketitle
+
+\section{Task 1}
+\label{sec:task-1}
+We define our precondition (in accordance with the assignment 1 (18s1) specification)
+\begin{gather*}
+  n \in \nat \And a_0 = a \And n_0 = n
+\end{gather*}
+so that it successfully states $n$ is a non-negative integer. We also freeze
+$a$'s and $n$'s initial value for later reference in the postcondition
+\begin{gather*}
+  \alpha \in \nat \And \All{\alpha <n.}{a[\alpha] = b[m(\alpha)]} \And m(n)=k \And a=a_0 \And n=n_0
+\end{gather*}
+which states that the output of our program is stored in array $b$, with adjacent identical strings collapsed to one upon termination of our program. Also, this postcondition states that the number of strings in $b$ is $k$. $a$ and $n$ are also assured of remaining unchanged by the program as they retain their initial values.\\\\
+Clearly, we need to define $m$ regarding the function as seen in the (above) postcondition. So, we do so
+\[ m(i) = 
+  \begin{cases}
+    0 & \IF\ i=0\\
+    m(i-1) & \IF\ i>0 \And a[i-1]=a[i]\\
+    m(i-1)+1 & \IF\ i>0 \And a[i-1]\neq a[i]\\
+  \end{cases}
+\]
+such that $m$ is an index mapping function describing the adjacent identical strings collapsing as per the program requirements.
+\section{Task 2}
+\label{sec:task-2}
+We propose the following proof outline to demonstrate the correctness
+of our code (in black).
+\begin{gather*}
+   \assn{n \in \nat \And a_0=a \And n_0=n}\\
+   \assn{I\subst 0k \subst 0j \subst 0i}\\
+   i\Ass 0;\\
+   \assn{I\subst 0k \subst 0j}\\
+   j\Ass 0;\\
+   \assn{I\subst 0k}\\
+   k\Ass 0;\\
+   \assn{I}\\
+   \WHILE~i<n~\DO\\
+   \qquad \assn{I\And 0\leq i<n}\\
+   \qquad \assn{J\subst0j}\\
+   \qquad j\Ass0;\\
+   \qquad \assn{J}\\
+   \qquad \WHILE~k\neq0\And a[i][j]\neq0\And a[i][j]=b[k-1][j]~\DO\\
+   \qquad \qquad \assn{J\And k\neq0\And a[i][j]\neq0\And a[i][j]=b[k-1][j]}\\
+   \qquad \qquad \assn{J\subst{j+1}j}\\
+   \qquad \qquad j\Ass j+1;\\
+   \qquad \qquad \assn{J}\\
+   \qquad \OD;\\
+   \qquad \assn{I\And (k=0\Or a[i][j]=0\Or a[i][j]\neq b[k-1][j])}\\
+   \qquad \IF~k=0\Or a[i][j]\neq b[k-1][j]~\\
+   \qquad \qquad \assn{J\And (k=0\Or a[i][j]=0\Or a[i][j]\neq b[k-1][j])\And (k=0\Or a[i][j]\neq b[k-1][j])}\\
+   \qquad \qquad \assn{K\subst0j}\\
+   \qquad \qquad j\Ass0;\\
+   \qquad \qquad \assn{K}\\
+   \qquad \qquad \WHILE~a[i][j]\neq0~\DO\\
+   \qquad \qquad \qquad \assn{K\And a[i][j]\neq0}\\
+   \qquad \qquad \qquad \assn{K\subst{j+1}j \subst{b:k\mapsto j\mapsto a[i][j]}b}\\
+   \qquad \qquad \qquad b[k][j]\Ass a[i][j];\\
+   \qquad \qquad \qquad \assn{K\subst{j+1}j}\\
+\end{gather*}
+\begin{gather*}
+   \qquad \qquad \qquad j\Ass j+1;\\
+   \qquad \qquad \qquad \assn{K}\\
+   \qquad \qquad \OD;\\
+   \qquad \qquad \assn{K\And a[i][j]=0}\\
+   \qquad \qquad \assn{K\subst{j+1}j \subst{b:k\mapsto j\mapsto0}b}\\
+   \qquad \qquad b[k][j]\Ass 0;\\
+   \qquad \qquad \assn{K\subst{j+1}j}\\
+   \qquad \qquad j\Ass j+1;\\
+   \qquad \qquad \assn{K}\\
+   \qquad \qquad \assn{I\subst{i+1}i\subst{k+1}k\And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]}\\
+   \qquad \qquad k\Ass k+1;\\
+   \qquad \qquad \assn{I\subst{i+1}i\And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]}\\
+   \qquad \ELSE\\
+   \qquad \qquad \assn{I\subst{i+1}i\And 0\leq i<n\And k\neq0\And a[i][j]=b[k-1][j]}\\
+   \qquad \qquad skip;\\
+   \qquad \qquad \assn{I\subst{i+1}i\And 0\leq i<n\And k\neq0 \And a[i][j]=b[k-1][j]}\\
+   \qquad \FI;\\
+   \qquad \assn{I\subst{i+1}i\And 0\leq i<n}\\
+   \qquad \assn{I\subst{i+1}i}\\
+   \qquad i\Ass i+1;\\
+   \qquad \assn{I}\\
+   \OD;\\
+   \assn{I\And i\geq n}\\
+   \assn{\alpha \in \nat \And \All{\alpha<n.}{a[\alpha]=b[m(\alpha)]} \And m(n)=k \And a=a_0 \And n=n_0}
+\end{gather*}
+where our invariants are
+\begin{align*}
+  I &= \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i\leq n\And m(i)=k\And a_0=a\And n_0=n\\
+  J &= I\And \beta \in \nat \And \All{\beta<j.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\\
+  K &= I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])
+\end{align*}
+The only remaining proof obligations are the nine implications between adjacent assertions.
+
+\subsection{First implication: $n\in \nat \And a_0=a\And n_0=n \Implies I\subst0k\subst0j\subst0i$}
+
+\begin{align*}
+  & I\subst0k\subst0j\subst0i\\
+  \justification{definition of $I$ and substitution}
+  & \alpha \in \nat \And \All{\alpha<0.}{a[\alpha]=b[m(\alpha)]}\And 0\leq 0\leq n\And m(0)=0\And a_0=a\And n_0=n\\
+  \justification{1st, 2nd and 4th conjuncts are vacuously true and can therefore be discarded}
+  & 0\leq 0\leq n\And a_0=a\And n_0=n\\
+  \justification{definition of natural numbers}
+  & n\in \nat \And a_0=a\And n_0=n
+\end{align*}
+Through logical equivalence, it is obvious that logical implication exists in both directions.
+
+\subsection{Second implication: $I\And 0\leq i<n\Implies J\subst0j$}
+
+\begin{align*}
+  & J\subst0j\\
+  \justification{definition of $J$ and substitution}
+  & I\And \beta \in \nat \And \All{\beta<0.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\\
+  \justification{the 2nd conjunct is vacuously true and can therefore be discarded}
+  & I\And 0\leq i<n
+\end{align*}
+Through logical equivalence, it is obvious that logical implication exists in both directions.
+
+\subsection{Third implication: $J\And k\neq0 \And a[i][j]\neq0\And a[i][j]=b[k-1][j]\Implies J\subst{j+1}j$}
+
+\begin{align*}
+  & J\And k\neq0\And a[i][j]\neq0\And a[i][j]=b[k-1][j]\\
+  \justification{definition of $J$}
+  & I\And \beta \in \nat \And \All{\beta<j.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\And k\neq0\\
+  & \And a[i][j]\neq0 \And a[i][j]=b[k-1][j]\\
+  \justification{the last conjunct forms the '$j$th' case for the third conjunct}
+  & I\And \beta \in \nat \And \All{\beta<j+1.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\And k\neq0\\
+  & \And a[i][j]\neq0\\
+  \justification[\Implies]{treating the final two conjuncts as $B$ in the scenario of $A\And B \Implies A$}
+  & I\And \beta \in \nat \And \All{\beta<j+1.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\\
+  \justification{definition of $J$ and substitution}
+  & J\subst{j+1}j
+\end{align*}
+To further explain the implication step, in the line above we treat
+\begin{align*}
+  & I\And \beta \in \nat \And \All{\beta<j+1.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n
+\end{align*}
+as $A$ and
+\begin{align*}
+  & k\neq0\And a[i][j]\neq0
+\end{align*}
+as $B$ such that $A\And B\Implies A$ which is true by the definition of logical implications.
+
+\subsection{Fourth implication:\\$J\And (k=0\Or a[i][j]=0\Or a[i][j]\neq b[k-1][j])$\\$ \And (k=0\Or a[i][j]\neq b[k-1][j]) \Implies K\subst0j$}
+
+\begin{align*}
+  & J\And (k=0\Or a[i][j]=0\Or a[i][j]\neq b[k-1][j])\And (k=0\Or a[i][j]\neq b[k-1][j])\\
+  \justification[\Implies]{the two groups of conjuncts form an $(A\Or B\Or C)\And (A\Or C)\Implies (A\Or C)$ scenario}
+  & J\And (k=0\Or a[i][j]\neq b[k-1][j])\\
+\justification{definition of J}
+  & I\And \beta \in \nat \And \All{\beta<j.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\And (k=0\Or a[i][j]\neq b[k-1][j])\\
+\justification{definition of non-equal strings* applied to the final conjunct}
+  & I\And \beta \in \nat \And \All{\beta<j.}{a[i][\beta]=b[k-1][\beta]}\And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\\
+  \justification[\Implies]{discard the 2nd and 3rd conjuncts and add our vacuously true statement}
+  & I\And \gamma \in \nat \And \All{\gamma<0.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+\justification{definition of $K$ and substitution}
+  & K\subst0j
+\end{align*}
+*Definition of Non-Equal Strings:
+a[i]$\neq$ b[j] if $\Exi{k}{a[i][k]=0}\And \Exi{l\leq k}{a[i][l]\neq b[j][l]}$
+
+\subsection{Fifth implication: $K\And a[i][j]\neq0 \Implies K\subst{j+1}j\subst{b:k\mapsto j\mapsto a[i][j]}b$}
+
+\begin{align*}
+  & K\And a[i][j]\neq0\\
+  \justification{definition of $K$}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i][j]=0\Or a[i]\neq b[k-1])\\
+  & \And a[i][j]\neq0\\
+  \justification{the final conjunct disagrees with the sixth conjunct}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\And a[i][j]\neq0\\
+  \justification[\Implies]{treating the final conjunct as $B$ in the scenario of $A\And B \Implies A$}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  \justification{we add a trivially true conjunct to the end of our assertion}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  & \And a[i][j]=a[i][j]\\
+  \justification{definition of $K$, substitutions and extracting the '$j+1$th' case from the 3rd conjunct}
+  & K\subst{j+1}j\subst{b:k\mapsto j\mapsto a[i][j]}b
+\end{align*}
+
+\subsection{Sixth implication:\\$K\And a[i][j]=0 \Implies K\subst{j+1}j \subst{b:k\mapsto j\mapsto0}b$}
+
+\begin{align*}
+  & K\And a[i][j]=0\\
+  \justification{definition of $K$}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  & \And a[i][j]=0\\
+  \justification{the last conjunct is trivially the same in reverse order}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  & \And 0=a[i][j]\\
+  \justification{definition of $K$, substitutions and extracting the '$j+1$th' case from the 3rd conjunct} 
+  & K\subst{j+1}j \subst{b:k\mapsto j\mapsto0}b
+\end{align*}
+
+\subsection{Seventh implication: $K \Implies I\subst{i+1}i\subst{k+1}k \And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]$}
+
+\begin{align*}
+  & K\\
+  \justification{definition of $K$}
+  & I\And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  \justification{definition of $I$}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i\leq n\And m(i)=k\And a_0=a\And n_0=n\\
+  & \And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And 0\leq i<n\And(k=0\Or a[i]\neq b[k-1])\\
+  \justification{simplifying the 3rd and 10th conjunct}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i<n\And m(i)=k\And a_0=a\And n_0=n\\
+  & \And \gamma \in \nat \And \All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\And(k=0\Or a[i]\neq b[k-1])\\
+  \justification[\Implies]{treating the 7th and 8th conjunct as $B$ in the scenario of $A\And B \Implies A$}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i<n\And m(i)=k\And a_0=a\And n_0=n\\
+  & \And(k=0\Or a[i]\neq b[k-1])\\
+  \justification[\Implies]{using 'Proof 1'* and 'Proof 2'**}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i<n\And m(i+1)=k+1\And a_0=a\And n_0=n\\
+  & \And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]\And a[i]=b[m(i)]\\
+  \justification{expanding the 3rd conjunct into two separate (3rd and 7th conjuncts below)}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i+1\leq n\And m(i+1)=k+1\And a_0=a\And n_0=n\\
+  & \And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]\And a[i]=b[m(i)]\\
+  \justification{reducing the '$i+1$th' case}
+  & \alpha \in \nat \And \All{\alpha<i+1.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i<n\And m(i+1)=k+1\And a_0=a\And n_0=n\\
+  & \And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]\\
+  \justification{definition of $I$ and substitutions}
+  & I\subst{i+1}i\subst{k+1}k \And 0\leq i<n\And (k=0\Or a[i]\neq b[k-1])\And a[i]=b[k]
+\end{align*}
+
+*Proof 1: We need to prove that $m(i+1)=k+1$ is a true statement. To do so, we rewrite $m(i+1)$ into $m(i)+1$. We now have to prove $m(i)+1=m(i)$ which is the same statement as $m(i)=m(i)-1$.$\\\\$Using the definition of our index mapping function $m$, we discover that this is a true statement under the condition that $a[i]\neq b[k-1]$ which is present in our assertion (above).$\\\\$
+**Proof 2: We need to prove that $a[i]=b[m(i)]$ is a true statement. To do so we remember that at this part of the program, we have just passed the 'Fifth Implication' in which we proved $b[k][j]=a[i][j]$ by using the conjunct of $K$ in which specifically $\\\\\All{\gamma<j.}{b[k][\gamma]=a[i][\gamma]}\\\\$ We define a 'Definition of Equal Strings' to be
+$\\\\a[i]=b[j]$ if $\Exi{k}{a[i][k]=0}\And \All{l\leq k}{a[i][l]=b[j][l]}\\\\$
+and this follows on from our definition of $K$. The final two conjuncts are $\\\\a[i]=b[k]\And a[i]=b[m(i)]\\\\$Furthermore, we know from our definition of our $I$ invariant that $m(i)=k$. Hence, these two statements prove that $\\\\a[i]=b[k].$
+
+\subsection{Eighth implication:\\ $I\subst{i+1}i\And 0\leq i<n \Implies I\subst{i+1}i$}
+
+\begin{align*}
+  & I\subst{i+1}i\And 0\leq i<n\\
+  \justification[\Implies]{treating the final conjunct as $B$ in the scenario of $A\And B \Implies A$}
+  & I\subst{i+1}i
+\end{align*}
+
+\subsection{Ninth implication:\\$I\And i\geq n \Implies \alpha \in \nat \And \All{\alpha<n.}{a[\alpha]=b[m(\alpha)]}\And m(n)=k\And a=a_0\And n=n_0$}
+
+\begin{align*}
+  & I\And i\geq n\\
+  \justification{definition of $I$}
+  & \alpha \in \nat \And \All{\alpha<i.}{a[\alpha]=b[m(\alpha)]}\And 0\leq i\leq n\And m(i)=k\And a_0=a\And n_0=n\And i\geq n\\
+  \justification{simplify the third and last conjunct to $i=n$}
+  & \alpha \in \nat \And \All{\alpha<n.}{a[\alpha]=b[m(\alpha)]}\And m(n)=k\And a_0=a\And n_0=n
+\end{align*}
+Through logical equivalence, it is obvious that logical implication exists in both directions.
+
+\section{Task 3}
+\label{sec:task-3}
+
+% for assignment 1 (18s1), you don't implement barf - it's provided
+\lstinputlisting{uniq.c}
+
+In our C implementation, we opted for the more traditional \lstinline{for} loop idiom instead of a \lstinline{while} loop. It should be clear that our \lstinline{for} loop captures the meaning of the encapsulating \lstinline{while} loop of the toy language program. We used a call of the C library function strcmp to implement the first nested \lstinline{while} loop (pseudo-code ''$j=j+1$'') and the second \lstinline{if} condition (pseudo-code ''$a[i][j]-b[k-1][j]\neq0$'') that compares the values in array $a[i]$ to array $b[j]$. (Cf. man strcmp.)\\\\
+As for the second nested \lstinline{while} loop (pseudo-code ''$b[k][j]=a[i][j]$''), we used a call of the C library function strcpy to copy the contents of array $b[k]$ to $a[i]$. (Cf. man strcpy.) Due to the conversion to the C functions strcmp and strcpy, this means the integer variable $j$ is unused by the program and can be removed from the C code.
+\end{document}

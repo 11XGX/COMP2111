@@ -1,0 +1,766 @@
+\documentclass[headings=small,a4paper,12pt]{scrartcl}
+% sometimes it's useful to have smaller fractions
+\usepackage{nicefrac}
+% COMP2111-specific macros. See
+% http://www.cse.unsw.edu.au/~cs2111/17s1/LaTeX/primer.html
+\usepackage{2111defs2}
+
+\usepackage{listings}
+\lstset{frame=single,framerule=0pt,language={C},showstringspaces=false,numbers=left,columns=fullflexible}
+
+\newcommand{\sorted}[3]{\mathit{s'ed}(#1[#2..#3])}
+\newcommand{\sort}[3]{\mathit{sort}(#1[#2..#3])}
+\newcommand{\pre}{\mathit{pre}}
+\newcommand{\post}{\mathit{post}}
+\newcommand{\bs}{\textsc{bs}\xspace}
+\newcommand{\emirpfunc}{\textsc{emirp}\xspace}
+\newcommand{\isemirp}{\textsc{isemirp}\xspace}
+\newcommand{\emirp}{\mathbb{E}}
+\newcommand{\primeset}{\mathbb{P}}
+\newcommand{\emirpNumber}{\text{emirpNumber}}
+\newcommand{\emirpsCounted}{\text{emirpsCounted}}
+
+\definecolor{orange}{RGB}{255,127,0}
+
+\title{Assignment 2}
+\author{Nathan Ellis, Rishad Mahbub}
+% that one align* may not fit onto a single page
+\allowdisplaybreaks
+
+\begin{document}
+\maketitle
+
+\section{Task 1}
+\label{sec:task-1}
+
+Define a function c: $\real\functo\real$ as
+\begin{align*}
+  c(n) = \floor{\log_{10}n}
+\end{align*}
+Define the set of all primes $\primeset$ as
+\begin{align*}
+  \primeset = \{\ x \in \nat \mid \forall{(1<i<x)}\ . \ {xmod(i)\neq0}\ \}
+\end{align*}
+Define the set of all emirps $\emirp$ as
+\begin{align*}
+  \emirp = \{\ x \in \nat \mid x = \sum_{i=0}^{c(x)} S_{i}10^{c(x)-i}\And r = \sum_{i=0}^{c(x)} S_{i}10^{i}\ \And x \in \primeset \And r \in \primeset \And x \neq r\ \}
+\end{align*}
+where $S$ is some constant. \\\\
+Define a function f: $\nat\functo\nat$ as
+\begin{gather*}
+  f(x) =
+  \begin{cases}
+      0 & \IF\ y\notin\emirp\\
+      1 & \IF\ y\in\emirp
+  \end{cases}
+\end{gather*}
+We specify our function as required by the assignment 2 specification as
+\begin{gather*}
+    {n:\left[
+    \begin{array}{l}
+      \emirpNumber > 0,\ f(n)=1 \And \emirpNumber = \sum_{k=0}^{n} f(k)
+    \end{array}
+  \right]}
+\end{gather*}
+As the precondition states, the user input number called \textit{emirpNumber} is greater than 0.
+The program specification then states that \textit{n} is changed such that the number of emirps between 0 and \textit{n} inclusive is equal to \textit{emirpNumber} and \textit{n} is itself an emirp.
+\\\\
+We also will specify a helper function as
+\begin{gather*}
+    {x:\left[
+    \begin{array}{l}
+      y > 0,\ x = f(y)
+    \end{array}
+  \right]}
+\end{gather*}
+Which takes input \textit{y} and sets \textit{x} according to the function \textit{f}.
+\pagebreak
+
+\section{Task 2}
+\label{sec:task-2}
+
+We will use two functions and so derive both using refinement calculus.
+
+\subsection{Emirp Derivation}
+\label{sec:emirpderivation}
+
+We start with a spec of the procedure $\emirpfunc$.
+\begin{align*}
+  &\PROC~\emirpfunc(\VALUE~n : \nat,\ \VALUE~\text{emirpNumber} : \nat)\cdot{}\\
+  &\qquad  {n:\left[
+    \begin{array}{l}
+      \emirpNumber>0,\ \sum_{k=1}^nf(k)=\emirpNumber \And f(n)=1
+    \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{i-loc}}
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \emirpNumber>0,\ \sum_{k=1}^nf(k)=\emirpNumber\And f(n)=1
+  \end{array}
+  \right]}{(1)}}\\
+%
+  \lrefstep{(1)}
+  {\textbf{seq - establishing a loop where I=$\sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0$}}
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \emirpNumber>0,\\ \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right];}{(2)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0\\
+    \And\ \emirpsCounted=\emirpNumber\And f(n)=1
+  \end{array}
+  \right];}{(3)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted \And f(n)=m \And n>0\\
+    \And\ \emirpsCounted=\emirpNumber\And f(n)=1,\\
+    \sum_{k=1}^nf(k)=\emirpNumber\And f(n)=1
+  \end{array}
+  \right]}{(4)}}\\
+%
+  \lrefstep{(2)}{\textbf{ass - justification below in 2.1.1}}
+  {n\Ass1;\ \emirpsCounted\Ass0;\ m\Ass0}\\
+%
+  \lrefstep{(3)}
+  {\textbf{while}}
+  {\WHILE\ (\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1)\ \DO\ }\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0\\
+    \And(\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1),\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}{(5)}}\\
+&
+  {\OD}\\
+%
+  \lrefstep{(4)}{\textbf{skip - justification below in 2.1.2}}
+  {\text{skip};}\\
+%
+  \lrefstep{(5)}
+  {\textbf{seq2}}
+  {\nt{n:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0\\
+    \And(\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1),\\
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0
+  \end{array}
+  \right];}{(6)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}{(7)}}\\
+%
+  \lrefstep{(6)}
+  {\textbf{ass - justification below in 2.1.3}}
+  {n\Ass n+1;}\\  
+%
+  \lrefstep{(7)}
+  {\textbf{seq2}}
+  {\nt{m:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0,\\
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right];}{(8)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}{(9)}}\\
+% 
+  \lrefstep{(8)}
+  {\textbf{s-post - justification below in 2.1.4}}
+  {m:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0,\\
+    f(n)=m
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{w-pre - justification below in 2.1.5}}
+  {m:\left[
+  \begin{array}{l}
+    n>0,\ f(n)=m
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{proc - defined and derived below in section 2.2}}
+  {\text{isEmirp} (m, n);}\\
+%
+  \lrefstep{(9)}
+  {\textbf{c-frame of n, m}}
+  {\emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{if}}
+  {\text{\IF\ m=1\ \THEN\ }\\}
+&
+  {\nt{\emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And m=1,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}{(10)}}\\
+&
+  {\text{\ELSE}} \\
+&
+  {\nt{\emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And m=0,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0
+  \end{array}
+  \right]}{(11)}}\\
+&
+  {\FI}\\
+%
+  \lrefstep{(10)}
+  {\textbf{ass - justification below in 2.1.6}}
+  {\emirpsCounted\Ass\emirpsCounted +1;}\\
+%
+  \lrefstep{(11)}
+  {\textbf{skip - justification below in 2.1.7}}
+  {\text{skip};}\\
+\end{align*}
+
+There are still some outstanding proofs in the above derivation. We will discharge them below in the following subsubsections.\\
+
+\pagebreak
+\subsubsection{Proof of $(2)\isrefinedby n\Ass 1; \text{emirpsCounted}\Ass 0; m\Ass 0$}
+\label{sec:proof2ass}
+
+We need to prove the validity of
+\begin{gather*}
+  \pre(2) \Implies (\post(2))\subst{1}n\subst{0}{\text{emirpsCounted}}\subst{0}m
+\end{gather*}
+We can prove this from the bottom up.
+\begin{align*}
+&\True\\
+%
+\justification{All conjuncts below are logically true}
+%
+&0=0 \And 0=0 \And 1>0\\ 
+%
+\justification{Using definition of f(1) to determine f(1)=0 as 1 is clearly not an emirp}
+%
+&f(1)=0 \And f(1)=0 \And 1>0\\ 
+%
+\justification{Expanding sigma of first conjunct below}
+%
+&\sum_{k=1}^1f(k)=0 \And f(1)=0 \And 1>0\\ 
+%
+\justification{Definitions and performing substituitions}
+%
+&(\post(2))\subst{1}n\subst{0}{\text{emirpsCounted}}\subst{0}m
+\end{align*}
+Hence any true precondition implies the given postcondition. 
+
+\subsubsection{Proof of $(4)\isrefinedby skip;$}
+\label{sec:proof4skip}
+We need to prove the validity of
+\begin{gather*}
+  \pre(4) \Implies (\post(4))\subst{n}{n_0}\subst{\text{emirpsCounted}}{\text{emirpsCounted}_0}\subst{m}{m_0}
+\end{gather*}
+We can prove from the top down:
+\begin{align*}
+&pre(4)\\ 
+%
+\justification{Definition}
+%
+&\sum_{k=1}^nf(k)=\emirpsCounted \And f(n)=m \And n>0\ \And \emirpsCounted=\emirpNumber\And f(n)=1\\
+%
+\justification[\Implies]{Discarding true conjuncts as A $\And$ B $\Implies$ A}
+%
+&\sum_{k=1}^nf(k)=\emirpsCounted \And \emirpsCounted=\emirpNumber\ \And f(n)=1\\
+%
+\justification{Substituiting emirpsCounted for emirpNumber as emirpsCounted = emirpNumber}
+%
+&\sum_{k=1}^nf(k)=\emirpNumber\And f(n)=1
+\end{align*}
+
+\subsubsection{Proof of $(6)\isrefinedby n\Ass n+1;$}
+\label{sec:proof6ass}
+We need to prove the validity of
+\begin{gather*}
+  \pre(6) \Implies (\post(6))\subst{n+1}n
+\end{gather*}
+We can prove this from the top down initially:
+
+\begin{align*}
+&pre(6)\\ 
+%
+\justification{Definition}
+%
+&\sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0\\
+&\And(\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1)\\
+%
+\justification[\Implies]{Discarding true conjuncts as A $\And$ B $\Implies$ A}
+%
+&\sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m \And n>0\\
+%
+\justification[\Implies]{Using the fact that n$>$0 $\Implies$ n$>$-1}
+%
+&\sum_{k=1}^{n}f(k)=\emirpsCounted\And f(n)=m \And n>-1\\
+\end{align*}
+The we finish from the bottom up using equivalences.
+\begin{align*}
+&\sum_{k=1}^{n}f(k)=\emirpsCounted\And f(n)=m \And n>-1\\
+%
+\justification{Simplification of the below}
+%
+&\sum_{k=1}^{n+1-1}f(k)=\emirpsCounted\And f(n+1-1)=m \And n+1>0\\
+%
+\justification{Defintion of post(6) and substituitions}
+%
+&(\post(6))\subst{n+1}n
+\end{align*}
+
+\subsubsection{Proof of (s-post) $\pre(8)\subst{m_0}{m} \And f(n)=m \Implies (\post(8))$}
+\label{sec:proof8.2proc}
+We can prove this from the top down initially:
+\begin{align*}
+&\pre(8)\subst{m_0}{m} \And f(n)=m\\
+%
+\justification{Definition and substituition}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m_0 \And n>0 \And f(n)=m\\
+%
+\justification[\Implies]{Discard f(n-1)=m$_0$ as A $\And$ B $\Implies$ A}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0\\
+%
+\justification{Definition}
+%
+&post(8)\\
+\end{align*}
+
+\subsubsection{Proof of (w-pre) $\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0 \Implies n>0$}
+\label{sec:proof8.2proc}
+We can prove this simply by discarding true conjuncts:
+\begin{align*}
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m \And n>0\\
+%
+\justification[\Implies]{Discard all but last conjunct as A $\And$ B $\Implies$ A}
+%
+&n>0\\
+\end{align*}
+
+\subsubsection{Proof of $(10)\isrefinedby emirpsCounted\Ass\emirpsCounted + 1;$}
+\label{sec:proof10ass}
+We need to prove the validity of
+\begin{gather*}
+  \pre(10) \Implies (\post(10))\subst{\text{emirpsCounted}+1}{\text{emirpsCounted}}
+\end{gather*}
+We can prove this from the top down:
+\begin{align*}
+&pre(10)\\
+% 
+\justification{Definition}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And m=1\\
+%
+\justification[\Implies]{Using the fact the f(n) = m to substitute m in the last conjunct}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And f(n)=1\\
+%
+\justification{Absorbing f(n) = 1 into the sigma conjunct}
+%
+&\sum_{k=1}^{n}f(k)=\emirpsCounted + 1\And f(n)=m \And n>0\\
+%
+\justification{Definition and substitution}
+%
+&(\post(10))\subst{\text{emirpsCounted}+1}{\text{emirpsCounted}}
+\end{align*}
+
+\subsubsection{Proof of $(11)\isrefinedby skip;$}
+\label{sec:proof11skip}
+We need to prove the validity of
+\begin{gather*}
+  \pre(11) \Implies (\post(11))\subst{\text{emirpsCounted}}{\text{emirpsCounted}_0}
+\end{gather*}
+Before we start this proof, we realize that this else branch implies m $\neq$ 1.\\
+However, the precondition gives m = f(n). The f() function only maps to values 0 and 1. Hence if m is not equal to 1, it implies m is equal to 0.\\
+Going back to the proof, we can prove this from the top down:
+\begin{align*}
+&pre(4)\\ 
+\justification{Definition}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And m=0\\
+%
+\justification[\Implies]{Using the fact that f(n) = m to substituite m in the last conjunct}
+%
+&\sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m \And n>0 \And f(n)=0\\
+%
+\justification{Absorbing f(n) = 0 into the sigma of the first conjunct. No affect to sum as f(n) = 0}
+%
+&\sum_{k=1}^{n}f(k)=\emirpsCounted \And f(n)=m \And n>0\\
+%
+\justification{Definition and subtituition}
+%
+&(\post(11))\subst{\text{emirpsCounted}}{\text{emirpsCounted}_0}\\
+\end{align*}
+
+\pagebreak
+\subsection{IsEmirp Derivation}
+\label{sec:isemirpderivation}
+For this program specification of $\isemirp$, we use our definition
+\begin{align*}
+  \emirp = \{\ x \in \nat \mid x = \sum_{i=0}^{c(x)} S_{i}10^{c(x)-i}\And r = \sum_{i=0}^{c(x)} S_{i}10^{i}\ \And x \in \primeset \And r \in \primeset \And x \neq r\ \}
+\end{align*}
+where S is some constant.\\\\
+We will also use our definition of function f:
+\begin{align*}
+  f(x) =
+  \begin{cases}
+      0 & \IF\ y\notin\emirp\\
+      1 & \IF\ y\in\emirp
+  \end{cases}
+\end{align*}
+We start with a spec of the procedure $\isemirp$.
+\begin{align*}
+  &\PROC~\isemirp(\RESULT~x : \nat, \VALUE~y : \nat)\cdot{}\\
+  &\qquad  \nt{x:\left[
+    \begin{array}{l}
+      y>0,\ x=f(y)
+    \end{array}
+  \right]}{(1)}\\
+% 
+  \lrefstep{(1)}
+  {\textbf{i-loc}}
+  {\nt{\VAR\ r\ \cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0,\ x=f(y)
+  \end{array}
+  \right]}{(2)}}\\
+% 
+  \lrefstep{(2)}
+  {\textbf{seq2}}
+  {\nt{r:\left[
+  \begin{array}{l}
+    y>0,\ y>0 \And r = 0
+  \end{array}
+  \right];}{(3)}}\\
+&
+  {\nt{x,r:\left[
+  \begin{array}{l}
+    y>0 \And r = 0,\ x=f(y)
+  \end{array}
+  \right]}{4)}}\\
+% 
+  \lrefstep{(3)}
+  {\textbf{ass - justification 2.2.1 below}}
+  {r\Ass0}\\
+%
+  \lrefstep{(4)}
+  {\textbf{i-con}}
+  {\CON\ S : [10]^{*}\cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0\And r=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\ x=f(y)
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{seq2}}
+  {\nt{\CON\ S : [10]^{*}\cdot{}\ r:\left[
+  \begin{array}{l}
+    y>0\And r=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\\\\ y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^{i}
+  \end{array}
+  \right];}{(5)}}\\
+&
+  {\nt{\CON\ S : [10]^{*}\cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^{i},\ x = f(y)
+  \end{array}
+  \right];}{(6)}}\\
+%
+  \lrefstep{(5)}
+  {\textbf{s-post - justification 2.2.2 below}}
+  {\CON\ S : [10]^{*}\cdot{}\ r:\left[
+  \begin{array}{l}
+    y>0\And r=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\ r=\sum_{i=0}^{C(y)} S_i 10^{i}
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{w-pre - justification 2.2.2 below}}
+  {\CON\ S : [10]^{*}\cdot{}\ r:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\ r=\sum_{i=0}^{C(y)} S_i 10^{i}
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{proc - justification 2.2.2 below}}
+  {\text{reversen}(y, r)}\\
+%
+  \lrefstep{(6)}
+  {\textbf{i-loc}}
+  {\VAR\ e:\bool\ .\ x, r, e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i, x=f(y)
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{c-frame r nor r$_0$ in post}}
+  {x, e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\ x=f(y)
+  \end{array}
+  \right]}\\  
+%
+  \refstep{\textbf{seq and c-frame on (8) where e nor e$_0$ is post}}
+  {\nt{e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+  \end{array}
+  \right];}{(7)}}\\
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y),\\
+    x=f(y)
+  \end{array}
+  \right]}{(8)}}\\
+%
+  \lrefstep{(7)}
+  {\textbf{s-post - justification 2.2.3 below}}
+  {e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{w-pre - justification 2.2.3 below}}
+  {e:\left[
+  \begin{array}{l}
+    True,\ e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+  \end{array}
+  \right];}\\
+%
+  \refstep{\textbf{proc - justification 2.2.3 below}}
+  {e\Ass \text{mpz\_probab\_prime\_p}(y) \And \text{mpz\_probab\_prime\_p}(r) \And \text{mpz\_cmp}(y, r)}\\
+%
+  \lrefstep{(8)}
+  {\textbf{if}}
+  {\text{\IF\ e\ \THEN\ }\\}
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    e\EQUIV\textsc{true}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    x=f(y)
+  \end{array}
+  \right]}{(9)}}\\
+&
+  {\text{\ELSE}} \\
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    e\EQUIV\textsc{false}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    x=f(y)
+  \end{array}
+  \right]}{(10)}}\\
+%
+  \lrefstep{(9)}
+  {\textbf{ass - justfication 2.2.4 below}}
+  {x\Ass1}\\
+%
+  \lrefstep{(10)}
+  {\textbf{ass - justfication 2.2.5 below}}
+  {x\Ass0}\\
+\end{align*}
+
+There are still some outstanding proofs in the above derivation. We will discharge them below in the next subsection.\\
+
+\pagebreak
+\subsubsection{Proof of $(3)\isrefinedby r\Ass0$}
+\label{sec:proof5ass}
+We need to prove the validity of
+\begin{gather*}
+  \pre(3) \Implies (\post(3))\subst{0}r
+\end{gather*}
+Proving from the bottom up, we have:
+\begin{align*}
+&pre(3)\\
+%
+\justification{Definition}
+%
+&y > 0\\
+%
+\justification{Second conjunct below is logically true. A $\And$ T is equivalent to A}
+%
+&y > 0 \And 0 = 0\\
+%
+\justification{Definition and substituition}
+%
+&post(3)\subst{0}r
+\end{align*}
+
+\subsubsection{Proof of $(5)\isrefinedby \textsc{reversen(y,r)}$}
+\label{sec:proof5ass}
+ 
+We use the definition of $\textsc{reversen}$ from the Assignment 2 Specification which reads:
+\begin{align*}
+  &\PROC~\textsc{reversen}(\VALUE~n:\nat, \RESULT~r:\nat)\cdot{}\\
+  &\qquad  \CON\ S:[10]^*\ .\ r:\left[
+    \begin{array}{l}
+      n=\sum_{i=0}^{c(n)}(S_i10^{(c(n)-i)})\And n>0, r=\sum_{i=0}^{c(n)}(S_i10^i)
+    \end{array}
+  \right]
+\end{align*}
+To prove this that (5) can be refined into the required procedure, we must follow the w-pre and s-post rules as described in the COMP2111 glossary. Here we use \textit{y} as the value parameter in place of \textit{n}.\\\\
+We start be strengthening the postcondition. We must prove:
+\begin{gather*}
+  pre(5)\subst{r_0}r \And post(\textsc{reversen}(y,r))\Implies post(5)\\
+\end{gather*}
+Proving from the top down:
+\begin{align*}
+&pre(5)\subst{r_0}r \And post(\textsc{reversen}(y,r))\\
+%
+\justification{Substitution}
+%
+&y>0\And r_0=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{c(n)}(S_i10^i)\\
+%
+\justification[\Implies]{Discarding the second conjunct as A $\And$ B $\Implies$ B}
+%
+&y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^{i}\\
+%
+\justification{Definition}
+%
+&\post(5)\\
+\end{align*}
+Now to prove our weakening of the precondition as seen above in the derivation. We must prove:
+\begin{gather*}
+pre(5)\Implies pre(\textsc{reversen}(y,r))\\
+\end{gather*}
+Proving from the top down:
+\begin{align*}
+&pre(5)\\
+%
+\justification{Substitution}
+%
+&y>0\And r=0\And y=\sum_{i=0}^{c(y)}(S_i10^{(c(y)-i)})\\
+%
+\justification[\Implies]{Discard second conjunct as A $\And$ B $\Implies$ A}
+%
+&y=\sum_{i=0}^{c(y)}(S_i10^{(c(y)-i)})\And y>0\\
+%
+\justification{Substitution, noting we are using $y$ as input}
+%
+&pre(\textsc{reversen}(y,r))\\
+\end{align*}
+Therefore, by w-pre and s-post, we have refined down to the specifications of the procedure allowing a valid call to it.
+
+\subsubsection{Proof of $(7)\isrefinedby e\Ass\textsc{mpz-probab-prime-p(y)} \And \textsc{mpz-probab-prime-p(r)} \And \textsc{mpz-cmp(y,r)}$}
+\label{sec:proof7proc}
+ 
+We specify $\textsc{mpz-probab-prime-p}$ and $\textsc{mpz-cmp}$ as:
+\begin{align*}
+  &\PROC~\textsc{mpz-probab-prime-p}(\VALUE~x:\nat, \RESULT~y:\bool)\cdot{}\\
+  &\qquad y:\left[
+    \begin{array}{l}
+      \textsc{true}, x\EQUIV(y\in\primeset)
+    \end{array}
+  \right]
+\end{align*}
+\begin{align*}
+  &\PROC~\textsc{mpz-cmp}(\VALUE~y:\ints, \VALUE~z:\ints, \RESULT~x:\bool)\cdot{}\\
+  &\qquad y:\left[
+    \begin{array}{l}
+      \textsc{true}, x\EQUIV(y=z)
+    \end{array}
+  \right]
+\end{align*}
+Similarly to 2.2.2, we begin my strengthening the postcondition.
+We need to prove:\\ pre(7)$\subst{e_0}{e}$ $\And$ $e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y) \Implies$ post(7)
+\begin{align*}
+&pre(7)\subst{e_0}{e} \And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\\
+%
+\justification{Definition and substituition}
+%
+&y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i \And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\\
+%
+\justification[\Implies]{Discarding the first conjunct}
+%
+&y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+\end{align*}
+Now we must weaken the precondition as to refine to our procedure call.
+To do such we must prove:\\
+$y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i \Implies True$\\\\
+As the precondition is taken to be true. True can of course be implied from True.
+\begin{align*}
+&y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\\
+%
+\justification[\Implies]{Using the fact that A $\And$ T $\Implies$ T}
+%
+&\text{True}
+\end{align*}
+By s-post and w-pre rules defined by the COMP2111 Glossary and expanding the postcondition, we now have:
+\begin{gather*}
+e:\left[\textsc{true},\ e\EQUIV(y\in\primeset)\And e\EQUIV(r\in\primeset)\And e\EQUIV(r\neq y)\right]
+\end{gather*}
+This meets the function specifications of mpz$\_$probab$\_$prime$\_$p and mpz$\_$cmp as defined above. Note that we are taking the intersection of all three calls simultaneously to forego writing each function refinement seperately.
+
+\subsubsection{Proof of $(9)\isrefinedby x\Ass 1$}
+\label{sec:proof9ass}
+
+We need to prove the validity of
+\begin{gather*}
+  \pre(9) \Implies (\post(9))\subst{1}x
+\end{gather*}
+i.e., the prerequisite of the relevant instance of \textbf{ass}.
+Expanding the definitions and performing the substitution yields
+\begin{gather*}
+  \left(
+    \begin{array}{l}
+      {\color{blue}y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}}\And {\color{red}r=\sum_{i=0}^{C(y)} S_i 10^i}\And {\color{orange}e\EQUIV\textsc{TRUE}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)}
+    \end{array}
+  \right) \Implies{}\\
+  f(y)=1\enskip.
+\end{gather*}
+The items in ${\color{blue}blue}$ and ${\color{red}red}$ form the first two conjuncts of our definition of emirps $\emirp$ (see Task 1). The equivalence in ${\color{orange}orange}$ shows that $y\in\primeset\And r\in\primeset \And x\neq r$ are all evaluated true in our pre-condition.  These three conditions form the needed three conjuncts for our definition of $\emirp$.  Therefore, $y$ $\in$ $\emirp$. We then notice that because $y\in\emirp$ and by our definition of $f(y)$ (see Task 1), $f(y)=1$, resulting in the postcondition.
+
+\subsubsection{Proof of $(10)\isrefinedby x\Ass 0$}
+\label{sec:proof10ass}
+
+We need to prove the validity of
+\begin{gather*}
+  \pre(10) \Implies (\post(10))\subst{0}x
+\end{gather*}
+i.e., the prerequisite of the relevant instance of \textbf{ass}.
+Expanding the definitions and performing the substitution yields
+\begin{gather*}
+  \left(
+    \begin{array}{l}
+      {\color{blue}y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}}\And {\color{red}r=\sum_{i=0}^{C(y)} S_i 10^i}\And {\color{orange}e\EQUIV\textsc{FALSE}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)}
+    \end{array}
+  \right) \Implies{}\\
+  f(y)=0\enskip.
+\end{gather*}
+The items in ${\color{blue}blue}$ and ${\color{red}red}$ form the first two conjuncts of our definition of emirps $\emirp$ (see Task 1). The equivalence in ${\color{orange}orange}$ shows that $y\in\primeset\And r\in\primeset \And x\neq r$ are collectively evaluated false in our pre-condition.  This means one of these conditions is false.  Looking at our definition of $\emirp$, the variable $y$ is not contained within the set $\emirp$ for this reason. We then notice that because $y\notin\emirp$ and by our definition of $f(y)$ (see Task 1), $f(y)=0$, resulting in our postcondition.
+
+\pagebreak
+\section{Task 3}
+\label{sec:task-3}
+
+% for assignment 1 (17s1), you don't implement barf - it's provided
+% Will change the c later so that it's only the bit required
+\lstinputlisting{emirp.c}
+
+In the C code we decided to do so and so
+
+\end{document}

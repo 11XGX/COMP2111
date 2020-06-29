@@ -1,0 +1,494 @@
+\documentclass[headings=small,a4paper,12pt]{scrartcl}
+% sometimes it's useful to have smaller fractions
+\usepackage{nicefrac}
+% COMP2111-specific macros. See
+% http://www.cse.unsw.edu.au/~cs2111/17s1/LaTeX/primer.html
+\usepackage{2111defs2}
+
+\usepackage{listings}
+\lstset{frame=single,framerule=0pt,language={C},showstringspaces=false,numbers=left,columns=fullflexible}
+
+\newcommand{\sorted}[3]{\mathit{s'ed}(#1[#2..#3])}
+\newcommand{\sort}[3]{\mathit{sort}(#1[#2..#3])}
+\newcommand{\pre}{\mathit{pre}}
+\newcommand{\post}{\mathit{post}}
+\newcommand{\bs}{\textsc{bs}\xspace}
+\newcommand{\emirpfunc}{\textsc{emirp}\xspace}
+\newcommand{\isemirp}{\textsc{isemirp}\xspace}
+\newcommand{\emirp}{\mathbb{E}}
+\newcommand{\primeset}{\mathbb{P}}
+\newcommand{\emirpNumber}{\text{emirpNumber}}
+\newcommand{\emirpsCounted}{\text{emirpsCounted}}
+
+\title{Assignment 2}
+\author{Nathan Ellis, Rishad Mahbub}
+% that one align* may not fit onto a single page
+\allowdisplaybreaks
+
+\begin{document}
+\maketitle
+
+\section{Task 1}
+\label{sec:task-1}
+
+Define a function c: $\real\functo\real$ as
+\begin{align*}
+  c(n) = \floor{\log_{10}n}
+\end{align*}
+Define the set of all primes $\primeset$ as
+\begin{align*}
+  \primeset = \{\ x \in \nat \mid \forall{(1<i<x)}\ . \ {xmod(i)\neq0}\ \}
+\end{align*}
+Define the set of all emirps $\emirp$ as
+\begin{align*}
+  \emirp = \{\ x \in \nat \mid x = \sum_{i=0}^{c(x)} S_{i}10^{c(x)-i}\And r = \sum_{i=0}^{c(x)} S_{i}10^{i}\ \And x \in \primeset \And r \in \primeset \And x \neq r\ \}
+\end{align*}
+where $S$ is some constant. \\\\
+Define a function f: $\nat\functo\nat$ as
+\begin{gather*}
+  f(y) =
+  \begin{cases}
+      0 & \IF\ y\notin\emirp\\
+      1 & \IF\ y\in\emirp
+  \end{cases}
+\end{gather*}
+We specify our function as required by the assignment 2 specification as
+\begin{gather*}
+    \nt{n:\left[
+    \begin{array}{l}
+      \emirpNumber > 0,\ f(n)=1 \And \emirpNumber = \sum_{k=0}^{n} f(k)
+    \end{array}
+  \right]}{(1)}
+\end{gather*}
+As the precondition states, the user input number called \textit{emirpNumber} is greater than 0.
+The program specification then states that \textit{n} is changed such that the number of emirps between 0 and \textit{n} inclusive is equal to \textit{emirpNumber} and \textit{n} is itself an emirp.
+\pagebreak
+
+\section{Task 2}
+\label{sec:task-2}
+
+We will use two functions and so derive both using refinement calculus.
+
+\subsection{Emirp Derivation}
+\label{sec:emirpderivation}
+
+We start with a spec of the procedure $\emirpfunc$.
+\begin{align*}
+  &\PROC~\emirpfunc(to be added)\cdot{}\\
+  &\qquad  {n:\left[
+    \begin{array}{l}
+      \emirpNumber>0,\ \sum_{k=1}^nf(k)=\emirpNumber \And f(n)=1
+    \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{i-loc}}
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \emirpNumber>0,\ \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=1
+  \end{array}
+  \right];}{(1)}}\\
+%
+  \lrefstep{(1)}
+  {\textbf{seq - see justification below}}
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \emirpNumber>0,\ \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right];}{(2)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m\\
+    \And\ \emirpsCounted=\emirpNumber\And f(n)=1
+  \end{array}
+  \right];}{(3)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\\
+    \And\ \emirpsCounted=\emirpNumber\And f(n)=1=m,\\
+    \sum_{k=1}^nf(k)=\emirpNumber\And f(n)=1=m
+  \end{array}
+  \right]}{(4)}}\\
+%
+  \lrefstep{(2)}{\textbf{ass - see justification below}}
+  {n\Ass0;\ \emirpsCounted\Ass0;\ m\Ass0}\\
+%
+  \lrefstep{(3)}
+  {\textbf{while}}
+  {\WHILE\ (\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1)\ \DO\ }\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m\\
+    \And(\emirpsCounted\neq\emirpNumber\Or f(n)\neq 1),\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right]}{(5)}}\\
+&
+  {\OD}\\
+%
+  \lrefstep{(5)}
+  {\textbf{seq2}}
+  {\nt{n:\left[
+  \begin{array}{l}
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m,\\
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m
+  \end{array}
+  \right];}{(6)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right]}{(7)}}\\
+%
+  \lrefstep{(6)}
+  {\textbf{ass}}
+  {n\Ass n+1;}\\  
+%
+  \lrefstep{(7)}
+  {\textbf{seq2}}
+  {\nt{m:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n-1)=m,\\
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right];}{(8)}}\\
+&
+  {\nt{n, m, \emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=m,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right]}{(9)}}\\
+%
+  \lrefstep{(8)}
+  {\textbf{ass}}
+  {m\Ass\isemirp (n);}\\
+%
+  \lrefstep{(9)}
+  {\textbf{if}}
+  {\text{\IF\ m=1\ \THEN\ }\\}
+&
+  {\emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=1=m,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{ass}}
+  {\emirpsCounted\Ass\emirpsCounted +1;}\\
+&
+  {\text{\ELSE}} \\
+&
+  {\emirpsCounted:\left[
+  \begin{array}{l}
+    \sum_{k=1}^{n-1}f(k)=\emirpsCounted\And f(n)=0=m,\\
+    \sum_{k=1}^nf(k)=\emirpsCounted\And f(n)=m
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{ass}}
+  {\text{skip};}\\
+&
+  {\FI}\\
+\end{align*}
+
+\subsection{IsEmirp Derivation}
+\label{sec:isemirpderivation}
+For this program specification of $\isemirp$, we use our definition
+\begin{align*}
+  \emirp = \{\ x \in \nat \mid x = \sum_{i=0}^{c(x)} S_{i}10^{c(x)-i}\And r = \sum_{i=0}^{c(x)} S_{i}10^{i}\ \And x \in \primeset \And r \in \primeset \And x \neq r\ \}
+\end{align*}
+where S is some constant.\\\\
+We will also use our definition of function f:
+\begin{align*}
+  f(x) =
+  \begin{cases}
+      0 & \IF\ y\notin\emirp\\
+      1 & \IF\ y\in\emirp
+  \end{cases}
+\end{align*}
+We start with a spec of the procedure $\isemirp$.
+\begin{align*}
+  &\PROC~\isemirp(\RESULT~x : \nat, \VALUE~y : \nat)\cdot{}\\
+  &\qquad  \nt{x:\left[
+    \begin{array}{l}
+      y>0,\ x=f(y)
+    \end{array}
+  \right]}{(1)}\\
+% 
+  \lrefstep{(1)}
+  {\textbf{i-loc}}
+  {\nt{\VAR\ r\ \cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0,\ x=f(y)
+  \end{array}
+  \right]}{(2)}}\\
+% 
+  \lrefstep{(2)}
+  {\textbf{seq2}}
+  {\nt{r:\left[
+  \begin{array}{l}
+    y>0,\ y>0 \And r = 0
+  \end{array}
+  \right];}{(3)}}\\
+&
+  {\nt{x,r:\left[
+  \begin{array}{l}
+    y>0 \And r = 0,\ x=f(y)
+  \end{array}
+  \right]}{4)}}\\
+% 
+  \lrefstep{(3)}
+  {\textbf{ass}}
+  {r\Ass0}\\
+%
+  \lrefstep{(4)}
+  {\textbf{i-con}}
+  {\CON\ S : [10]^{*}\cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0\And r=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\ x=f(y)
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{seq2}}
+  {\nt{\CON\ S : [10]^{*}\cdot{}\ r:\left[
+  \begin{array}{l}
+    y>0\And r=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i},\\\\ y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^{i}
+  \end{array}
+  \right];}{(5)}}\\
+&
+  {\nt{\CON\ S : [10]^{*}\cdot{}\ x,r:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^{i},\ x = f(y)
+  \end{array}
+  \right];}{(6)}}\\
+%
+  \lrefstep{(5)}
+  {\textbf{proc - see justification below}}
+  {\text{reversen}(y, r)}\\
+%
+  \lrefstep{(6)}
+  {\textbf{i-loc}}
+  {\VAR\ e:\bool\ .\ x, r, e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i, x=f(y)
+  \end{array}
+  \right]}\\
+%
+  \refstep{\textbf{c-frame r nor r$_0$ in post}}
+  {x, e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\ x=f(y)
+  \end{array}
+  \right]}\\  
+%
+  \refstep{\textbf{seq and c-frame on (8) where e nor e$_0$ in post}}
+  {\nt{e:\left[
+  \begin{array}{l}
+    y>0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+  \end{array}
+  \right];}{(7)}}\\
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y),\\
+    x=f(y)
+  \end{array}
+  \right]}{(8)}}\\
+%
+  \lrefstep{(7)}
+  {\textbf{proc - see justification below}}
+  {e\Ass \text{mpz\_probab\_prime\_p}(y) \And \text{mpz\_probab\_prime\_p}(r) \And \text{mpz\_cmp}(y, r)}\\
+%
+  \lrefstep{(8)}
+  {\textbf{if}}
+  {\text{\IF\ e\ \THEN\ }\\}
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    e\EQUIV\textsc{true}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    x=f(y)
+  \end{array}
+  \right]}{(9)}}\\
+&
+  {\text{\ELSE}} \\
+&
+  {\nt{x:\left[
+  \begin{array}{l}
+    e\EQUIV\textsc{false}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i,\\
+    x=f(y)
+  \end{array}
+  \right]}{(10)}}\\
+%
+  \lrefstep{(9)}
+  {\textbf{ass - see justfication below}}
+  {x\Ass1}\\
+%
+  \lrefstep{(10)}
+  {\textbf{ass - see justfication below}}
+  {x\Ass0}\\
+\end{align*}
+
+There are still some outstanding proofs in the above derivation. We will discharge them below in the next subsection.\\
+\pagebreak
+
+\subsection{Proof of $(5)\isrefinedby \textsc{reversen(y,r)}$}
+\label{sec:proof5ass}
+
+We use the definition of $\textsc{reversen}$ from the Assignment 2 Specification which reads:
+\begin{align*}
+  &\PROC~\textsc{reversen}(\VALUE~n:\nat, \RESULT~r:\nat)\cdot{}\\
+  &\qquad  \CON\ S:[10]^*\ .\ r:\left[
+    \begin{array}{l}
+      n=\sum_{i=0}^{c(n)}(S_i10^{(c(n)-i)})\And n>0, r=\sum_{i=0}^{c(n)}(S_i10^i)
+    \end{array}
+  \right]
+\end{align*}
+To prove this function's pre-condition and post-condition are identical to pre(5) and post(5) we we must follow the w-pre and s-post rules as described in the COMP2111 glossary.  Upon insepction, we must adjust our function call variables to suit those of our specification (let $n$ in the above become $y$).  We begin the proof by weakening our pre(5), in which we must prove:
+\begin{gather*}
+  pre(5)\Implies pre(\textsc{reversen}(y,r))\\
+\end{gather*}
+so we do so
+\begin{align*}
+pre(5)\\
+%
+\justification{Substitution}
+%
+y>0\And r=0\And y=\sum_{i=0}^{c(y)}(S_i10^{(c(y)-i)})\\
+%
+\justification[\Implies]{Treating B as the 2nd conjunct, we have A$\And$B$\And$C$\Implies$A$\And$B}
+%
+y=\sum_{i=0}^{c(y)}(S_i10^{(c(y)-i)})\And y>0\\
+%
+\justification{Substitution and replacing $n$ with $y$}
+%
+pre(\textsc{reversen}(y,r))\\
+\end{align*}
+
+We then have to strengthen our post(5), in which we must prove:
+\begin{gather*}
+  pre(5)\subst{r_0}r \And post(\textsc{reversen}(y,r))\Implies post(\textsc{reversen}(y,r))\\
+\end{gather*}
+so we do so
+\begin{align*}
+pre(5)\subst{r_0}r \And post(\textsc{reversen}(y,r))\\
+%
+\justification{Substitution}
+%
+y>0\And r_0=0\And y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{c(n)}(S_i10^i)\\
+%
+\justification[\Implies]{Treating B as the final conjunct, we have A $\And$ B $\Implies$ B}
+%
+r=\sum_{i=0}^{c(n)}(S_i10^i)\\
+%
+\justification{Substitution}
+%
+post(\textsc{reversen}(y,r))\\
+\end{align*}
+
+Therefore, by w-pre and s-post, we have proven the function call to be a correct refinement of our specification's pre-condition and post-condition.\\
+
+\subsection{Proof of $(7)\isrefinedby \textsc{mpz-probab-prime-p(y)}; \textsc{mpz-probab-prime-p(r)}; \textsc{mpz-cmp(y,r)}$}
+\label{sec:proof7proc}
+
+We use the definition of $\textsc{mpz-probab-prime-p}$ and $\textsc{mpz-cmp}$ from the Assignment 2 Specification which read:
+\begin{align*}
+  &\PROC~\textsc{mpz-probab-prime-p}(\VALUE~x:\nat, \RESULT~y:\bool)\cdot{}\\
+  &\qquad y:\left[
+    \begin{array}{l}
+      \textsc{true}, x\EQUIV(y\in\primeset)
+    \end{array}
+  \right]
+\end{align*}
+\begin{align*}
+  &\PROC~\textsc{mpz-cmp}(\VALUE~y:\ints, \VALUE~z:\ints, \RESULT~x:\bool)\cdot{}\\
+  &\qquad y:\left[
+    \begin{array}{l}
+      \textsc{true}, x\EQUIV(y=z)
+    \end{array}
+  \right]
+\end{align*}
+We need to strengthen our post(7) and we do so as follows
+\begin{align*}
+post(7)
+%
+\justification{Substitution}
+%
+y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)
+%
+\justification[\Implies]{Expanding the final conjunct}
+%
+y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset)\And e\EQUIV(r\in\primeset)\And e\EQUIV(r\neq y)
+\end{align*}
+We then need to weaken our pre(7) and we do so as follows
+\begin{align*}
+pre(7)
+%
+\justification{Substitution}
+%
+y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i
+%
+\justification[\Implies]{Treating the previous statement as A in A$\And \textsc{true}\Implies \textsc{true}$}
+%
+\textsc{true}
+\end{align*}
+By s-post and w-pre rules defined by the COMP2111 Glossary, we now have a pre-condition and post-condition
+\begin{gather*}
+e:\left[\textsc{true},\ y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}\And r=\sum_{i=0}^{C(y)} S_i 10^i\And e\EQUIV(y\in\primeset)\And e\EQUIV(r\in\primeset)\And e\EQUIV(r\neq y)\right]
+\end{gather*}
+
+\subsection{Proof of $(9)\isrefinedby x\Ass 1$}
+\label{sec:proof9ass}
+
+We need to prove the validity of
+\begin{gather*}
+  \pre(9) \Implies (\post(9))\subst{1}x
+\end{gather*}
+i.e., the prerequisite of the relevant instance of \textbf{ass}.
+Expanding the definitions and performing the substitution yields
+\begin{gather*}
+  \left(
+    \begin{array}{l}
+      {\color{blue}y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}}\And {\color{red}r=\sum_{i=0}^{C(y)} S_i 10^i}\And {\color{green}e\EQUIV\textsc{TRUE}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)}
+    \end{array}
+  \right) \Implies{}\\
+  f(y)=1\enskip.
+\end{gather*}
+The items in ${\color{blue}blue}$ and ${\color{red}red}$ form the first two conjuncts of our definition of emirps $\emirp$ (see Task 1). The equivalence in ${\color{green}green}$ shows that $y\in\primeset\And r\in\primeset \And x\neq r$ are all evaluated true in our pre-condition.  These three conditions form the final three conjuncts from our definition of $\emirp$.  Therefore, the variable $x$ is contained within the set $\emirp$. We then notice that because $x\in\emirp$ and by our definition of $f(y)$ (see Task 1), $f(y)=1$ as required.
+
+\subsection{Proof of $(10)\isrefinedby x\Ass 0$}
+\label{sec:proof10ass}
+
+We need to prove the validity of
+\begin{gather*}
+  \pre(10) \Implies (\post(10))\subst{0}x
+\end{gather*}
+i.e., the prerequisite of the relevant instance of \textbf{ass}.
+Expanding the definitions and performing the substitution yields
+\begin{gather*}
+  \left(
+    \begin{array}{l}
+      {\color{blue}y=\sum_{i=0}^{C(y)} S_i 10^{C(y)-i}}\And {\color{red}r=\sum_{i=0}^{C(y)} S_i 10^i}\And {\color{green}e\EQUIV\textsc{FALSE}\EQUIV(y\in\primeset\And r\in\primeset\And r\neq y)}
+    \end{array}
+  \right) \Implies{}\\
+  f(y)=0\enskip.
+\end{gather*}
+The items in ${\color{blue}blue}$ and ${\color{red}red}$ form the first two conjuncts of our definition of emirps $\emirp$ (see Task 1). The equivalence in ${\color{green}green}$ shows that $y\in\primeset\And r\in\primeset \And x\neq r$ are collectively evaluated false in our pre-condition.  This means one of these conditions is false.  Looking at our definition of $\emirp$, the variable $x$ is not contained within the set $\emirp$ for this reason. We then notice that because $x\notin\emirp$ and by our definition of $f(y)$ (see Task 1), $f(y)=0$ as required.
+
+\section{Task 3}
+\label{sec:task-3}
+
+% for assignment 1 (17s1), you don't implement barf - it's provided
+% Will change the c later so that it's only the bit required
+\lstinputlisting{emirp.c}
+
+In the C code
+
+\end{document}

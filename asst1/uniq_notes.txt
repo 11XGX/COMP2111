@@ -1,0 +1,83 @@
+-------------------------------
+PART 1
+-------------------------------
+
+m Definition:
+m(i) = { 0 				if i = 0 }
+	   { m(i-1)			if i > 0 && a[i-1] = a[i] }
+	   { m(i-1) + 1 	if i > 0 && a[i-1] /= a[i] }
+
+Preconditions:
+n e N ^ n0 = n ^ a0 = a
+
+Postconditions:
+For all i < n. a[i] = b[m(i)] ^ m(n) = k ^ a = a0 ^ n = n0
+
+-------------------------------
+PART 2
+-------------------------------
+
+Must prove uniq():
+{ n e N ^ n0 = n ^ a0 = a }
+{ FIRST IMPLICATION }
+{ I[0 / k][0 / j][1 / i] }
+i := 1;
+{ I[0 / k][0 / j] }
+j := 0;
+{ I[0 / k] }
+k := 0;										
+{ I }
+while i < n do
+    { I ^ i < n }
+    { SECOND IMPLICATION }
+    { J[0 / j] }
+	j = 0;
+	{ J }
+	while a[i][j] /= 0 ^ a[i][j] = b[k][j] do
+	    { J ^ a[i][j] /= 0 ^ a[i][j] = b[k][j] }
+	    { THIRD IMPLICATION }
+	    { J[j+1 / j] }
+	    j := j + 1;
+	    { J }
+	od;
+	{ J ^ (a[i][j] = 0 v a[i][j] /= b[k][j] }
+	{ FOURTH IMPLICATION }
+	{ I ^ i < n }
+	if (a[i][j] - b[k][j] /= 0) {
+	    { I ^ i < n ^ a[i][j] - b[k][j] /= 0 }
+	    { FIFTH IMPLICATION }
+	    { J[k+1 / k][0 / j] }
+        j := 0;
+        { J[k+1 / k] }
+        k := k + 1;
+        { J }
+        while a[i][j] = 0 do
+            { J ^ a[i][j] = 0 }
+            { SIXTH IMPLICATION }
+            { J[j+1 / j][axiom] }
+        	b[k][j] := a[i][j];
+        	{ J[j+1 / j] }
+        	j := j + 1;
+        	{ J }
+        }
+        { J ^ a[i][j] /= 0 }
+        { SEVENTH IMPLICATION }
+        { I[axiom] ^ i < n ^ a[i][j] - b[k][j] /= 0 }
+        b[k][j] := 0;
+        { I ^ i < n ^ a[i][j] - b[k][j] /= 0 }
+    else
+        { I ^ i < n ^ a[i][j] - b[k][j] = 0 }
+        skip
+        { I ^ i < n ^ a[i][j] - b[k][j] = 0 }
+    fi;
+    { I ^ i < n ^ (a[i][j] - b[k][j] /= 0 v a[i][j] - b[k][j] = 0) }
+    { EIGHTH IMPLICATION }
+    { I[i+1 / i] }
+    i := i + 1;
+    { I }
+od;
+{ I ^ i >= n }
+{ NINTH IMPLICATION }
+{ For all i < n. a[i] = b[m(i)] ^ m(n) = k ^ a = a0 ^ n = n0 }
+
+-------------------------------
